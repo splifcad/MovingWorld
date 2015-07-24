@@ -5,9 +5,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
 /**
- * Adds rotateRoll.
+ * Just some helpher methods for my sanity.
  */
-
 public class Vec3Mod extends Vec3 {
 
     public Vec3Mod(Vec3 vec3) {
@@ -117,5 +116,6 @@ public class Vec3Mod extends Vec3 {
         double d2 = this.zCoord;
         return this.makeNewVec(d0, d1, d2);
     }
+
 
 }

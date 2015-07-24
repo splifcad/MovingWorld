@@ -5,6 +5,7 @@ import darkevilmac.movingworld.common.chunk.LocatedBlock;
 import darkevilmac.movingworld.common.chunk.mobilechunk.world.FakeWorld;
 import darkevilmac.movingworld.common.entity.EntityMovingWorld;
 import darkevilmac.movingworld.common.tile.IMovingWorldTileEntity;
+import darkevilmac.movingworld.common.util.AABBRotator;
 import darkevilmac.movingworld.common.util.Vec3Mod;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -260,27 +261,6 @@ public class MobileChunk implements IBlockAccess {
         }
     }
 
-    public AxisAlignedBB calculateBlockBounds(BlockPos pos) {
-        if (this.getBlock(pos) == null || (this.getBlock(pos) != null && this.getBlock(pos).getMaterial() == Material.air)) {
-            return null;
-        }
-
-        AxisAlignedBB axisAlignedBB = this.getBlockState(pos).getBlock().getCollisionBoundingBox(this.getFakeWorld(), pos, getBlockState(pos));
-        chunkBoundingBoxes.put(pos, axisAlignedBB);
-
-        double maxDX = new Double(maxX());
-        double maxDY = new Double(maxY());
-        double maxDZ = new Double(maxZ());
-
-        maxDX = maxDX / 2 * -1;
-        maxDY = maxDY / 2 * -1;
-        maxDZ = maxDZ / 2 * -1;
-
-        axisAlignedBB = axisAlignedBB.offset(entityMovingWorld.posX + maxDX - 0.5, entityMovingWorld.posY + maxDY, entityMovingWorld.posZ + maxDZ - 0.5);
-        boundingBoxes.put(pos, axisAlignedBB);
-
-        return axisAlignedBB;
-    }
 
     public List<AxisAlignedBB> getBoxes() {
         ArrayList<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
@@ -342,26 +322,56 @@ public class MobileChunk implements IBlockAccess {
      * @param rotationYaw
      */
     public void updateBlockBounds(float rotationYaw) {
+        HashBiMap<BlockPos, AxisAlignedBB> newBoundingBoxes = HashBiMap.create();
+
         for (AxisAlignedBB bb : chunkBoundingBoxes.values()) {
             if (bb != null) {
+                BlockPos offset = chunkBoundingBoxes.inverse().get(bb);
+                float rotationRadians = (float) Math.toRadians(rotationYaw);
+
+                AxisAlignedBB axisAlignedBB = bb;
                 BlockPos pos = chunkBoundingBoxes.inverse().get(bb);
 
                 double maxDX = new Double(maxX());
+                double maxDY = new Double(maxY());
                 double maxDZ = new Double(maxZ());
 
-                maxDX = maxDX / 2;
-                maxDZ = maxDZ / 2;
+                maxDX = maxDX / 2 * -1;
+                maxDY = maxDY / 2 * -1 + 1;
+                maxDZ = maxDZ / 2 * -1;
 
-                float yaw = (float) Math.toRadians(rotationYaw);
 
-                Vec3Mod vec = new Vec3Mod(pos.getX() - maxDX, pos.getY() - minY(), pos.getZ() - maxDZ);
-                vec = vec.rotateAroundY(yaw);
+                axisAlignedBB = AABBRotator.rotateAABBAroundY(axisAlignedBB, offset.getX(), offset.getZ(), rotationRadians);
+                Vec3Mod vec3 = new Vec3Mod(maxDX, maxDY, maxDZ).rotateAroundY(rotationRadians);
+                axisAlignedBB = axisAlignedBB.offset(entityMovingWorld.posX + vec3.xCoord, entityMovingWorld.posY +  vec3.yCoord, entityMovingWorld.posZ +  vec3.zCoord);
 
-                bb = bb.offset(entityMovingWorld.posX + vec.xCoord, entityMovingWorld.posY + vec.yCoord, entityMovingWorld.posZ + vec.zCoord);
-
-                boundingBoxes.put(pos, bb);
+                newBoundingBoxes.put(pos, axisAlignedBB);
             }
         }
+
+        this.boundingBoxes = newBoundingBoxes;
+    }
+
+    public AxisAlignedBB calculateBlockBounds(BlockPos pos) {
+        if (this.getBlock(pos) == null || (this.getBlock(pos) != null && this.getBlock(pos).getMaterial() == Material.air)) {
+            return null;
+        }
+
+        AxisAlignedBB axisAlignedBB = this.getBlockState(pos).getBlock().getCollisionBoundingBox(this.getFakeWorld(), pos, getBlockState(pos));
+        chunkBoundingBoxes.put(pos, axisAlignedBB);
+
+        double maxDX = new Double(maxX());
+        double maxDY = new Double(maxY());
+        double maxDZ = new Double(maxZ());
+
+        maxDX = maxDX / 2 * -1;
+        maxDY = maxDY / 2 * -1;
+        maxDZ = maxDZ / 2 * -1;
+
+        axisAlignedBB = axisAlignedBB.offset(entityMovingWorld.posX + maxDX, entityMovingWorld.posY + maxDY + 1, entityMovingWorld.posZ + maxDZ);
+        boundingBoxes.put(pos, axisAlignedBB);
+
+        return axisAlignedBB;
     }
 
     public boolean setBlockState(BlockPos pos, IBlockState state) {

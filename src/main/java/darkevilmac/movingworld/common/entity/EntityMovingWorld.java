@@ -165,7 +165,6 @@ public abstract class EntityMovingWorld extends EntityBoat implements IEntityAdd
     private void initCommon() {
         mobileChunk = new MobileChunkServer(worldObj, this);
         initMovingWorldCommon();
-        mobileChunk.calculateBounds();
     }
 
     @Override
@@ -309,8 +308,12 @@ public abstract class EntityMovingWorld extends EntityBoat implements IEntityAdd
 
     @Override
     public void onUpdate() {
+        if (firstUpdate)
+            mobileChunk.calculateBounds();
+        else
+            mobileChunk.updateBlockBounds(rotationYaw);
+
         onEntityUpdate();
-        mobileChunk.updateBlockBounds(rotationYaw);
 
         prevPosX = posX;
         prevPosY = posY;
