@@ -4,6 +4,7 @@ import darkevilmac.movingworld.common.chunk.LocatedBlock;
 import darkevilmac.movingworld.common.chunk.MovingWorldAssemblyInteractor;
 import darkevilmac.movingworld.common.chunk.assembly.AssembleResult;
 import darkevilmac.movingworld.common.chunk.assembly.ChunkAssembler;
+import darkevilmac.movingworld.common.chunk.assembly.IAssembleResultReceiver;
 import darkevilmac.movingworld.common.entity.EntityMovingWorld;
 import darkevilmac.movingworld.common.entity.MovingWorldInfo;
 import darkevilmac.movingworld.common.util.LocatedBlockList;
@@ -20,7 +21,7 @@ import net.minecraft.world.World;
 
 import java.util.UUID;
 
-public abstract class TileMovingWorldMarkingBlock extends TileEntity implements IMovingWorldTileEntity {
+public abstract class TileMovingWorldMarkingBlock extends TileEntity implements IMovingWorldTileEntity, IAssembleResultReceiver {
 
     public LocatedBlockList removedFluidBlocks; // A list of fluid blocks that were destroyed last disassemble, used to fill back in when we reassemble.
     private AssembleResult assembleResult, prevResult;
@@ -207,6 +208,18 @@ public abstract class TileMovingWorldMarkingBlock extends TileEntity implements 
             compound.setTag("removedFluidCompounds", new NBTTagCompound());
         }
     }
+
+    public void recieveEntity(AssembleResult result, World world, EntityPlayer requester, EntityMovingWorld movingWorld) {
+        if (movingWorld != null) {
+            movingWorld.setInfo(getInfo());
+            if (worldObj.spawnEntityInWorld(movingWorld)) {
+                requester.mountEntity(movingWorld);
+                assembleResult = null;
+            }
+        }
+        mountedMovingWorld(requester, movingWorld, 3);
+    }
+
 
     @Override
     public void writeToNBT(NBTTagCompound compound) {

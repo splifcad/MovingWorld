@@ -21,6 +21,10 @@ public class MainConfig {
     public boolean iterativeAlgorithm;
     public boolean diagonalAssembly;
     public boolean useWhitelist;
+
+    public int maxAssemblePerTick;
+    public int maxDisassemblePerTick;
+
     public Set<String> blockBlacklist;
     public Set<String> blockWhitelist;
     public Set<String> overwritableBlocks;
@@ -83,6 +87,9 @@ public class MainConfig {
         iterativeAlgorithm = config.get(Configuration.CATEGORY_GENERAL, "Use Iterative Algorithm", false).getBoolean();
         diagonalAssembly = config.get(Configuration.CATEGORY_GENERAL, "Assemble Diagonal Blocks NOTE: Can be overridden by mods!", false).getBoolean();
         useWhitelist = config.get("mobile_chunk", "use_whitelist", false, "Switch this property to select the block restriction list to use. 'true' for the 'allowed_blocks' whitelist, 'false' for the 'forbidden_blocks' blacklist.").getBoolean(false);
+
+        maxAssemblePerTick = config.get("mobile_chunk", "Max Assemble Per Tick", 400, "How many blocks can be removed from the world during assembly per tick").getInt();
+        maxDisassemblePerTick = config.get("mobile_chunk", "Max Disassemble Per Tick", 400, "How many blocks can be set during disassembly per tick").getInt();
 
         String[] forbiddenBlocks = config.get("mobile_chunk", "forbidden_blocks", blockBlackListNames, "A list of blocks that will not be added to a Moving World.").getStringList();
         String[] allowedBlocks = config.get("mobile_chunk", "allowed_blocks", blockWhiteListNames, "A list of blocks that are allowed on a Moving World.").getStringList();
